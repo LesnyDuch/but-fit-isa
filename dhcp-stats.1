@@ -1,0 +1,72 @@
+.TH DHCP-STATS 1
+.SH NAME
+dhcp-stats \- show DHCP network statistics
+.SH SYNOPSIS
+.B  dhcp-stats
+[\fB\-c\fR \fISECONDS\fR]
+[\fB\-r\fR \fIFILE\fR]
+[\fB\-i\fR \fDEV1,[DEV2,...]\fR]
+\fBip-prefix\fR
+[\fBip-prefix\fR [...]]
+.SH
+.SH DESCRIPTION
+.B dhcp-stats
+is a Python script that sniffs out DHCPv4 packets on ports 67 and 68 using all
+available network interfaces (each interface monitoring runs in a separate thread) except loopback,
+or networks passed by the user (an unavailable device is handled by an error).
+
+Once a device is given an IP address by the server the script checks if it belongs to a subnetwork whose
+address was passed as a console argument to the script by the user. With this information the script
+calculates statistics (maximal number of hosts, currently allocated addresses,
+percentage of utilization) of each network and prints it out to the console.
+
+If a client device's lease time runs out, its address is removed from active network list and as such is not accounted for in the statistics.
+Also if a client sends a RELEASE message it is removed from active network list.
+
+qThe script's networking functions were implemented using the \fBpcapy\fR library, which means it has to be
+present in the system for the script to work.
+
+The script requires to be run with \fBsuperuser privileges\fR.
+.SH
+.SH OPTIONS
+.TP
+.BR \ip-prefix
+Address of subnetwork that is to be included in the statistics.
+It is accepted in format address/mask e.g. 192.168.0.0/24.
+.TP
+.BR \-c " " \fISECONDS\fR
+If provided, the script also outputs the statistics in CSV format into file \fBlog.csv\fR
+periodically, every \fISECONDS\fR seconds. The value has to be a whole number greater than 0.
+.TP
+.BR \-i " " \fIDEV1[,DEV2,...]\fR
+By using this argument the user is capable of choosing which devices should be
+used for listening. Each device is delimited by a comma. If a device passed this
+way is not in the system, the application will exit.
+
+.SH
+.SH LOGGING
+If \fB-c\fR option was set, the script logs the statistics into file log.csv.
+For more information see sections \fBOPTIONS\fR and \fBFILES\fR
+.SH
+.SH FILES
+.BR log.csv
+If -c argument was given, all logs are saved in this file. The file is in csv form,
+which means that every line is in format DATE,MAX_HOST,ALLOCATED_ADDRESSES,UTILIZATION.
+.SH
+.SH EXAMPLES
+.TP
+dhcp-stats 192.168.0.0/24
+ - Monitors statistics for subnetwork with given address.
+.TP
+dhcp-stats 192.168.0.0/24 192.168.0.0/25
+ - Creates statistics for both subnetworks with given addresses.
+.TP
+dhcp-stats -c 10 192.168.0.0/24
+ - Creates statistics for given subnetwork and saves those statistics in log.csv file.
+.TP
+dhcp-stats -i eth0,eth1 192.168.0.0/24
+ - The script will make statistics based on information caught solely from network
+ interfaces \fBeth0\fR and \fBeth1\fR.
+
+.SH AUTHOR
+Marian Orszagh (xorsza00@stud.fit.vutbr.cz)
